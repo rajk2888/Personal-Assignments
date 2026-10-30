@@ -1,0 +1,660 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Supply Chain Analytics Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700;800&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap">
+<style>
+/* Layout: fixed left rail (pillars) + scrolling control-room canvas; hub hero, pillar grid, per-pillar tool catalogs */
+:root{
+  color-scheme: dark;
+  --bg:#000415; --bg-2:#010B29; --bg-3:#031340; --lift:#06205D;
+  --panel:rgba(6,32,93,.28); --panel-hi:rgba(7,56,142,.32);
+  --line:#1d2b4a; --line-hi:#374662; --circuit:#2D6CB4;
+  --text:#F9FBFD; --mist:#C3CFDF; --muted:#9BA9C2; --label:#6f9cc4;
+  --accent:#47ABE0; --neon:#5AB2F3; --ice:#85BAE8; --frost:#BCDFF3; --violet:#7B6CF6;
+  --ok:#3FCF9A; --warn:#F2B84B; --crit:#F0646C;
+  --f-display:"Exo 2","Montserrat",system-ui,sans-serif;
+  --f-label:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-track:"Montserrat","Inter",sans-serif;
+  --rail:252px;
+  --glow:0 0 12px rgba(90,178,243,.5);
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(ellipse 80% 60% at 70% 0%, var(--lift) 0%, var(--bg-3) 25%, var(--bg-2) 50%, var(--bg) 85%) fixed, var(--bg)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--bg)}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--neon);outline-offset:2px;border-radius:6px}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- side rail ---------- */
+.rail{position:fixed;top:0;bottom:0;left:0;width:calc(var(--rail) + env(safe-area-inset-left,0px));z-index:50;
+  padding:calc(20px + env(safe-area-inset-top,0px)) 14px calc(16px + env(safe-area-inset-bottom,0px)) calc(14px + env(safe-area-inset-left,0px));
+  background:linear-gradient(180deg,rgba(1,11,41,.96),rgba(0,4,21,.98));border-right:1px solid var(--line);
+  display:flex;flex-direction:column;gap:18px;overflow-y:auto;transition:transform .3s ease}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px;text-decoration:none}
+.brand-mark{width:36px;height:36px;flex:none}
+.brand-txt{font-family:var(--f-display);font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:13px;line-height:1.1}
+.brand-txt span{display:block;color:var(--neon);font-size:11px;letter-spacing:.18em;font-weight:700}
+.nav-group{display:flex;flex-direction:column;gap:2px}
+.nav-h{font-family:var(--f-track);font-weight:600;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--label);padding:8px 10px 6px}
+.nav a{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--mist);
+  font-family:var(--f-label);font-weight:600;font-size:16px;letter-spacing:.06em;text-transform:uppercase;position:relative;transition:background .2s,color .2s}
+.nav a svg{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nav a:hover{background:rgba(71,171,224,.08);color:var(--text)}
+.nav a[aria-current="page"]{background:linear-gradient(90deg,rgba(71,171,224,.2),rgba(71,171,224,.02));color:var(--text)}
+.nav a[aria-current="page"]::before{content:"";position:absolute;left:-14px;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--neon);box-shadow:var(--glow)}
+.nav a[aria-current="page"] svg{stroke:var(--neon);filter:drop-shadow(0 0 4px rgba(90,178,243,.7))}
+.nav .count{margin-left:auto;font-family:var(--f-body);font-size:11px;font-weight:500;letter-spacing:0;color:var(--muted);
+  border:1px solid var(--line-hi);border-radius:10px;padding:0 7px;font-variant-numeric:tabular-nums}
+.rail-foot{margin-top:auto;padding:12px 10px 0;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.rail-foot b{color:var(--ok);font-weight:600}
+.dot-live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:6px;box-shadow:0 0 8px var(--ok);animation:pulse 2.4s ease-in-out infinite}
+
+/* ---------- topbar (mobile) ---------- */
+.topbar{display:none;position:sticky;top:env(safe-area-inset-top,0px);z-index:40;align-items:center;gap:12px;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:rgba(0,4,21,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.menu-btn{width:40px;height:40px;border-radius:8px;border:1px solid var(--line-hi);background:var(--panel);display:grid;place-items:center;cursor:pointer}
+.menu-btn svg{width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.8;stroke-linecap:round}
+.scrim{display:none}
+
+/* ---------- main ---------- */
+main{margin-left:calc(var(--rail) + env(safe-area-inset-left,0px));min-width:0}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 64px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
+.kicker{font-family:var(--f-track);font-weight:600;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--label)}
+.ruled{display:flex;align-items:center;gap:14px}
+.ruled::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--circuit),transparent)}
+h1,h2,h3{margin:0;text-wrap:balance}
+.d-title{font-family:var(--f-display);font-weight:800;text-transform:uppercase;letter-spacing:.05em;line-height:.98}
+.accent{color:#4FA9EE;text-shadow:0 0 18px rgba(79,169,238,.35)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;align-items:center;padding-block:8px 28px}
+.hero h1{font-size:clamp(34px,5vw,64px);margin:14px 0 18px}
+.hero h1 .connector{display:block;font-size:.34em;letter-spacing:.3em;color:var(--mist);margin:.5em 0 .35em;font-weight:700}
+.hero p.lede{color:var(--mist);max-width:52ch;font-size:16px;margin:0 0 22px}
+.hub-wrap{position:relative;aspect-ratio:1.15/1;max-width:100%;min-width:0}
+#hub{position:absolute;inset:0;width:100%;height:100%}
+.search{display:flex;align-items:center;gap:10px;max-width:520px;padding:4px 6px 4px 14px;border-radius:10px;
+  border:1px solid rgba(133,186,232,.3);background:rgba(1,11,41,.7);box-shadow:inset 0 0 18px rgba(31,108,202,.15)}
+.search svg{width:18px;height:18px;stroke:var(--ice);fill:none;stroke-width:1.8;flex:none}
+.search input{flex:1;min-width:0;background:none;border:0;outline:none;padding:10px 0;color:var(--text)}
+.search input::placeholder{color:var(--muted)}
+.search kbd{font-family:var(--f-body);font-size:11px;color:var(--muted);border:1px solid var(--line-hi);border-radius:5px;padding:2px 6px}
+.stats{display:flex;flex-wrap:wrap;gap:28px;margin-top:24px}
+.stat b{display:block;font-family:var(--f-display);font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)}
+.stat span{font-family:var(--f-label);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* search results */
+.results{margin:6px 0 28px;display:grid;gap:8px}
+.result{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 14px;border-radius:10px;
+  background:rgba(1,11,41,.6);border:1px solid var(--line);text-decoration:none}
+.result:hover{border-color:var(--circuit)}
+.result small{color:var(--muted)}
+
+/* pillar grid */
+.sec-h{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:12px 0 18px;flex-wrap:wrap}
+.sec-h h2{font-family:var(--f-display);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:22px}
+.sec-h p{margin:0;color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.pillar{position:relative;display:flex;flex-direction:column;text-decoration:none;border-radius:14px;overflow:hidden;
+  border:1px solid rgba(133,186,232,.18);background:linear-gradient(165deg,rgba(7,56,142,.28),rgba(1,11,41,.55) 60%);
+  transition:transform .25s ease,border-color .25s,box-shadow .25s}
+.pillar:hover,.pillar:focus-visible{transform:translateY(-3px);border-color:rgba(133,186,232,.5);box-shadow:0 10px 40px rgba(31,108,202,.25)}
+.pillar .vis{aspect-ratio:16/10;max-width:100%;border-bottom:1px solid var(--line);background:
+  radial-gradient(ellipse at 50% 60%,rgba(7,56,142,.45),transparent 70%),
+  repeating-linear-gradient(0deg,transparent 0 19px,rgba(45,108,180,.08) 19px 20px),
+  repeating-linear-gradient(90deg,transparent 0 19px,rgba(45,108,180,.08) 19px 20px)}
+.pillar .vis svg{display:block;width:100%;height:100%}
+.pillar .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.pillar h3{font-family:var(--f-label);font-weight:700;font-size:21px;letter-spacing:.07em;text-transform:uppercase}
+.pillar p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.45}
+.pillar .foot{margin-top:auto;padding-top:10px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ice);
+  font-family:var(--f-track);font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.pillar .foot i{font-style:normal;transition:transform .2s}
+.pillar:hover .foot i{transform:translateX(4px)}
+
+.help-band{margin-top:36px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.help{display:flex;gap:16px;align-items:center;padding:18px 20px;border-radius:14px;border:1px solid var(--line-hi);background:rgba(1,11,41,.6);text-decoration:none}
+.help:hover{border-color:var(--circuit)}
+.node{width:52px;height:52px;flex:none;border-radius:50%;border:2px solid var(--neon);display:grid;place-items:center;
+  box-shadow:var(--glow),inset 0 0 14px rgba(90,178,243,.35);background:rgba(3,19,64,.7)}
+.node svg{width:22px;height:22px;stroke:var(--text);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.help b{font-family:var(--f-label);font-size:19px;letter-spacing:.06em;text-transform:uppercase;display:block}
+.help span{color:var(--muted);font-size:13.5px}
+
+/* pillar view */
+.p-head{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px;align-items:center;margin-bottom:28px}
+.p-head h1{font-size:clamp(32px,4.4vw,54px);margin:12px 0 14px}
+.p-head p{color:var(--mist);max-width:58ch;margin:0}
+.p-vis{border-radius:16px;border:1px solid rgba(133,186,232,.22);overflow:hidden;aspect-ratio:16/10;max-width:100%;
+  background:radial-gradient(ellipse at 50% 55%,rgba(7,56,142,.55),rgba(1,11,41,.7) 70%);box-shadow:0 0 50px rgba(31,108,202,.18)}
+.p-vis svg{display:block;width:100%;height:100%}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+.chip{border:1px solid var(--line-hi);background:rgba(1,11,41,.6);color:var(--mist);border-radius:999px;padding:6px 14px;cursor:pointer;
+  font-family:var(--f-label);font-weight:600;font-size:14px;letter-spacing:.08em;text-transform:uppercase}
+.chip[aria-pressed="true"]{border-color:var(--neon);color:var(--text);background:rgba(71,171,224,.16);box-shadow:var(--glow)}
+.note{font-size:12.5px;color:var(--muted);margin-left:auto}
+.tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.tool{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:12px;border:1px solid var(--line-hi);
+  background:linear-gradient(160deg,rgba(46,67,119,.28),rgba(1,11,41,.55));min-width:0}
+.tool-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.badge{font-family:var(--f-label);font-weight:600;font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ice);
+  border:1px solid rgba(133,186,232,.35);border-radius:5px;padding:1px 8px}
+.pill{font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;display:inline-flex;align-items:center;gap:6px}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.live{color:var(--ok);background:rgba(63,207,154,.1)}
+.pill.beta{color:var(--warn);background:rgba(242,184,75,.1)}
+.pill.planned{color:var(--muted);background:rgba(155,169,194,.1)}
+.tool h3{font-family:var(--f-body);font-weight:600;font-size:16px;line-height:1.3}
+.tool p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.45}
+.meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.meta b{color:var(--mist);font-weight:500}
+.open{margin-top:auto;align-self:flex-start;display:inline-flex;gap:8px;align-items:center;text-decoration:none;font-weight:600;font-size:13px;
+  padding:7px 14px;border-radius:8px;border:1px solid var(--neon);color:var(--text);background:rgba(71,171,224,.12)}
+.open:hover{background:rgba(71,171,224,.24)}
+.open[aria-disabled="true"]{border-color:var(--line-hi);color:var(--muted);background:none;cursor:default}
+
+/* forms & tables */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}
+.card{border:1px solid var(--line-hi);border-radius:14px;background:rgba(1,11,41,.65);padding:20px}
+.card h2{font-family:var(--f-label);font-size:20px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
+form{display:grid;gap:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:grid;gap:6px;font-size:12.5px;font-weight:600;color:var(--mist);letter-spacing:.02em}
+input[type=text],select,textarea{width:100%;background:rgba(0,4,21,.75);border:1px solid var(--line-hi);border-radius:8px;padding:10px 12px;outline:none}
+input[type=text]:focus,select:focus,textarea:focus{border-color:var(--neon);box-shadow:0 0 0 3px rgba(90,178,243,.15)}
+textarea{min-height:110px;resize:vertical}
+.err{color:var(--crit);font-size:12.5px;min-height:1em}
+.btn{justify-self:start;cursor:pointer;border:0;border-radius:8px;padding:11px 20px;font-weight:600;color:#00122e;
+  background:linear-gradient(180deg,#7cc4f5,#3A9FDA);box-shadow:0 0 18px rgba(90,178,243,.35)}
+.btn:hover{filter:brightness(1.08)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-family:var(--f-label);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-size:13px;
+  padding:8px 10px;border-bottom:1px solid var(--line-hi);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+td.id{font-variant-numeric:tabular-nums;color:var(--ice);white-space:nowrap}
+.prio{font-weight:600;font-size:12px}
+.prio.P1{color:var(--crit)}.prio.P2{color:var(--warn)}.prio.P3{color:var(--ice)}
+.empty{color:var(--muted);text-align:center;padding:28px 10px}
+.docs{display:grid;gap:10px}
+.doc{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:14px 16px;border-radius:12px;border:1px solid var(--line-hi);background:rgba(1,11,41,.6)}
+.doc .ext{width:44px;height:52px;border-radius:6px;border:1px solid var(--circuit);display:grid;place-items:end center;padding-bottom:6px;
+  font-family:var(--f-label);font-weight:700;font-size:12px;letter-spacing:.1em;color:var(--ice);background:linear-gradient(180deg,rgba(45,108,180,.25),rgba(1,11,41,.4))}
+.doc h3{font-size:15px;font-weight:600}
+.doc small{color:var(--muted);font-size:12.5px}
+.toast{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:70;padding:12px 18px;border-radius:10px;
+  background:var(--bg-3);border:1px solid var(--neon);box-shadow:var(--glow);font-weight:500;transform:translateY(20px);opacity:0;transition:.3s;pointer-events:none}
+.toast.show{transform:none;opacity:1}
+
+/* view entrance */
+.view{animation:rise .5s ease both}
+@keyframes rise{from{opacity:.001;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ---------- pillar animation primitives ---------- */
+.v-scroll{animation:vscroll 6s linear infinite}
+.v-scroll.slow{animation-duration:9s}
+@keyframes vscroll{to{transform:translateX(-160px)}}
+.v-spin{transform-box:view-box;transform-origin:80px 50px;animation:spin 14s linear infinite}
+.v-spin.rev{animation-direction:reverse;animation-duration:20s}
+.v-spin.fast{animation-duration:7s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.v-breathe{animation:breathe 3.2s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.35}50%{opacity:.85}}
+.v-scan{animation:scan 3.4s ease-in-out infinite}
+@keyframes scan{0%{transform:translateY(0)}50%{transform:translateY(46px)}100%{transform:translateY(0)}}
+.v-dash{stroke-dasharray:4 4;animation:dash 1.6s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-16}}
+
+@media (max-width:1180px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.tools{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){
+  .rail{transform:translateX(-102%);box-shadow:none}
+  body.nav-open .rail{transform:none;box-shadow:20px 0 60px rgba(0,0,0,.6)}
+  body.nav-open .scrim{display:block;position:fixed;inset:0;z-index:45;background:rgba(0,4,21,.6)}
+  .topbar{display:flex}
+  main{margin-left:0}
+  .wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+  .hero,.p-head,.two{grid-template-columns:minmax(0,1fr)}
+  .hub-wrap{order:-1;max-width:520px;width:100%;margin:0 auto}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .help-band{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .grid,.tools{grid-template-columns:minmax(0,1fr)}
+  .row{grid-template-columns:minmax(0,1fr)}
+  .result{grid-template-columns:minmax(0,1fr) auto}.result .r-ic{display:none}
+  .doc{grid-template-columns:auto minmax(0,1fr)}.doc .open{grid-column:2}
+  .note{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+<aside class="rail" id="rail" aria-label="Pillars">
+  <a class="brand" href="#home">
+    <svg class="brand-mark" viewBox="0 0 36 36" aria-hidden="true">
+      <circle cx="18" cy="18" r="15" fill="none" stroke="#2D6CB4" stroke-width="1.2" stroke-dasharray="3 3"/>
+      <circle cx="18" cy="18" r="9.5" fill="rgba(3,19,64,.8)" stroke="#5AB2F3" stroke-width="1.8"/>
+      <path d="M13.5 20.5l3-4 2.5 2.5 3.5-5" fill="none" stroke="#BCDFF3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="brand-txt">Supply Chain<span>Analytics Hub</span></div>
+  </a>
+  <nav class="nav" id="nav"></nav>
+  <div class="rail-foot"><span class="dot-live"></span><b>All systems normal</b><br>Data refreshed nightly · 02:00 CT</div>
+</aside>
+<div class="scrim" id="scrim"></div>
+
+<main>
+  <div class="topbar">
+    <button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-controls="rail" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+    </button>
+    <div class="brand-txt">Supply Chain<span>Analytics Hub</span></div>
+  </div>
+  <div class="wrap" id="view"></div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============ CONFIG: replace "#" with real dashboard / document URLs ============ */
+const PILLARS = [
+  {id:"supply-demand", name:"Supply & Demand", group:"Analytics",
+   blurb:"Balance supply against demand, spot shortages early and see what is clear to build.",
+   lede:"One view of demand, supply commits and constraints, so planners can act on gaps before they hit the build schedule.",
+   tools:[
+    {n:"Demand–Supply Balance",t:"Dashboard",d:"Weekly demand vs. committed supply by part, site and horizon, with gap waterfall.",c:"Daily",o:"Planning Analytics",s:"live",u:"#"},
+    {n:"Shortage & Clear-to-Build Monitor",t:"Dashboard",d:"Which build orders are clear to build, which are short, and the part blocking each one.",c:"Every 4 h",o:"Planning Analytics",s:"live",u:"#"},
+    {n:"MRP Exception Workbench",t:"App",d:"Prioritized reschedule-in / out and cancel messages with impact scoring.",c:"Daily",o:"Planning Systems",s:"live",u:"#"},
+    {n:"Allocation Simulator",t:"App",d:"Test how scarce supply splits across sites and customer orders before committing.",c:"On demand",o:"Data Science",s:"beta",u:"#"},
+    {n:"Supply Commit Tracker",t:"Report",d:"Supplier commit dates against need dates, with slip history per PO line.",c:"Daily",o:"Planning Analytics",s:"live",u:"#"}
+   ]},
+  {id:"master", name:"Master", group:"Analytics",
+   blurb:"Material, supplier and BOM master data, with quality scores and change history.",
+   lede:"Clean master data drives every plan downstream. Check completeness, find bad parameters and trace changes.",
+   tools:[
+    {n:"Material Master Quality Scorecard",t:"Dashboard",d:"Completeness and validity checks across material, plant and purchasing views.",c:"Daily",o:"Data Governance",s:"live",u:"#"},
+    {n:"Supplier Master Explorer",t:"Dashboard",d:"Supplier records, sites, payment terms and duplicate-vendor detection.",c:"Weekly",o:"Data Governance",s:"live",u:"#"},
+    {n:"BOM Explorer",t:"App",d:"Multi-level where-used and indented BOM search with effectivity dates.",c:"Daily",o:"Engineering Data",s:"live",u:"#"},
+    {n:"Planning Parameter Audit",t:"Report",d:"Lead time, safety stock, lot size and MOQ outliers against actual history.",c:"Weekly",o:"Planning Analytics",s:"beta",u:"#"},
+    {n:"Master Data Change Log",t:"Report",d:"Who changed which field, when, and the before / after values.",c:"Daily",o:"Data Governance",s:"planned",u:"#"}
+   ]},
+  {id:"forecast", name:"Forecast", group:"Analytics",
+   blurb:"Forecast accuracy, bias and the consensus workbench for each planning cycle.",
+   lede:"Track how well the forecast performs, where it is biased, and what changed between planning cycles.",
+   tools:[
+    {n:"Forecast Accuracy & Bias",t:"Dashboard",d:"MAPE, WMAPE and bias by product family, lag and planner.",c:"Monthly",o:"Demand Planning",s:"live",u:"#"},
+    {n:"Consensus Forecast Workbench",t:"App",d:"Statistical, sales and final consensus side by side with override notes.",c:"Per cycle",o:"Demand Planning",s:"live",u:"#"},
+    {n:"Forecast vs. Actual Waterfall",t:"Dashboard",d:"Bridge from last cycle's forecast to actuals, split by driver.",c:"Monthly",o:"Demand Planning",s:"live",u:"#"},
+    {n:"Demand Sensing Signals",t:"Dashboard",d:"Leading indicators and order-book signals feeding the short-term forecast.",c:"Weekly",o:"Data Science",s:"beta",u:"#"}
+   ]},
+  {id:"inventory", name:"Inventory", group:"Analytics",
+   blurb:"On-hand, days of supply, excess and obsolete stock, and count accuracy by site.",
+   lede:"See where inventory sits, how long it will last, and which stock is at risk of becoming excess or obsolete.",
+   tools:[
+    {n:"Inventory Health",t:"Dashboard",d:"On-hand value, turns and excess & obsolete exposure by site and category.",c:"Daily",o:"Inventory Analytics",s:"live",u:"#"},
+    {n:"Days of Supply by Site",t:"Dashboard",d:"Coverage in days against target bands, with stock-out risk flags.",c:"Daily",o:"Inventory Analytics",s:"live",u:"#"},
+    {n:"Slow-Moving & Obsolescence Tracker",t:"Report",d:"Aging buckets, last-movement date and disposition status.",c:"Weekly",o:"Inventory Analytics",s:"live",u:"#"},
+    {n:"Cycle Count Accuracy",t:"Dashboard",d:"Count accuracy and variance value by warehouse and ABC class.",c:"Daily",o:"Warehouse Ops",s:"live",u:"#"},
+    {n:"Safety Stock Optimizer",t:"App",d:"Recommend safety stock from demand and lead-time variability at a target service level.",c:"On demand",o:"Data Science",s:"beta",u:"#"}
+   ]},
+  {id:"purchasing", name:"Purchasing", group:"Analytics",
+   blurb:"Open and past-due POs, supplier delivery performance, spend and price variance.",
+   lede:"Follow every purchase order from release to receipt and measure how suppliers deliver against commitments.",
+   tools:[
+    {n:"Open PO & Past-Due Tracker",t:"Dashboard",d:"Open lines, past-due quantity and value by buyer, supplier and commodity.",c:"Every 4 h",o:"Procurement Analytics",s:"live",u:"#"},
+    {n:"Supplier OTD Scorecard",t:"Dashboard",d:"On-time delivery to commit and to need date, by supplier and month.",c:"Weekly",o:"Procurement Analytics",s:"live",u:"#"},
+    {n:"PO Confirmation Slip Monitor",t:"Report",d:"Confirmations that moved later than the need date, ranked by build impact.",c:"Daily",o:"Procurement Analytics",s:"live",u:"#"},
+    {n:"Spend Cube",t:"Dashboard",d:"Spend by commodity, supplier, site and period with drill to invoice.",c:"Monthly",o:"Procurement Analytics",s:"live",u:"#"},
+    {n:"Purchase Price Variance",t:"Dashboard",d:"PPV against standard cost and last price paid, by part and buyer.",c:"Monthly",o:"Finance Analytics",s:"beta",u:"#"}
+   ]},
+  {id:"others", name:"Others", group:"Analytics",
+   blurb:"Supplier risk, logistics visibility, trade compliance and quality analytics.",
+   lede:"Specialist tools that support the core pillars: risk, logistics, trade compliance and quality.",
+   tools:[
+    {n:"Supplier Risk Radar",t:"Dashboard",d:"Financial, geographic and single-source risk scores per supplier.",c:"Weekly",o:"Risk Analytics",s:"live",u:"#"},
+    {n:"In-Transit Visibility",t:"Dashboard",d:"Shipments in transit, ETA changes and delayed lanes.",c:"Every 4 h",o:"Logistics",s:"live",u:"#"},
+    {n:"Export Classification Lookup",t:"App",d:"Search classification (ECCN) and license requirements by part number.",c:"Daily",o:"Trade Compliance",s:"live",u:"#"},
+    {n:"Quality Nonconformance",t:"Dashboard",d:"Nonconformance reports by supplier, defect code and disposition.",c:"Daily",o:"Supplier Quality",s:"beta",u:"#"}
+   ]},
+  {id:"service-requests", name:"Service Requests", group:"Support",
+   blurb:"Request a new report, report a data issue or ask for access.", lede:"Raise a ticket for a new dashboard, a data issue, an access request or an enhancement."},
+  {id:"documents", name:"Documents", group:"Support",
+   blurb:"KPI definitions, data dictionary, user guides and release notes.", lede:"Definitions, guides and procedures behind every tool in the hub."}
+];
+const DOCS = [
+  {n:"KPI Definitions Handbook",c:"Definitions",x:"PDF",d:"How each metric in the hub is calculated: OTD, DOS, MAPE, PPV and more.",up:"Oct 2026",u:"#"},
+  {n:"Supply Chain Data Mart: Data Dictionary",c:"Definitions",x:"XLSX",d:"Tables, fields, grain and source system for every dataset behind the dashboards.",up:"Sep 2026",u:"#"},
+  {n:"Hub User Guide",c:"Guides",x:"PDF",d:"Navigating pillars, filters, exports and subscriptions.",up:"Oct 2026",u:"#"},
+  {n:"Reading the Demand–Supply Balance",c:"Training",x:"PPTX",d:"Walkthrough of the balance view for new planners.",up:"Aug 2026",u:"#"},
+  {n:"Access Request Procedure",c:"Procedures",x:"DOCX",d:"Roles, approvers and turnaround for dashboard and data access.",up:"Jul 2026",u:"#"},
+  {n:"Data Issue Escalation Procedure",c:"Procedures",x:"DOCX",d:"Severity levels, owners and response targets for data defects.",up:"Jul 2026",u:"#"},
+  {n:"Release Notes: October 2026",c:"Release notes",x:"PDF",d:"New tools, retired reports and metric changes this month.",up:"Oct 2026",u:"#"}
+];
+
+/* ============ icons ============ */
+const IC = {
+  "home":'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  "supply-demand":'<path d="M3 17c3-6 6-6 9 0s6 6 9 0"/><path d="M3 7c3 6 6 6 9 0s6-6 9 0" opacity=".6"/>',
+  "master":'<circle cx="12" cy="12" r="3"/><circle cx="4.5" cy="6" r="2"/><circle cx="19.5" cy="6" r="2"/><circle cx="12" cy="20.5" r="2"/><path d="M6.3 7l3.4 3.3M17.7 7l-3.4 3.3M12 15v3.5"/>',
+  "forecast":'<path d="M3 19h18"/><path d="M4 15l4-4 3 2 4-5"/><path d="M15 8l5-3" stroke-dasharray="2 2.5"/>',
+  "inventory":'<rect x="3" y="13" width="5" height="7"/><rect x="9.5" y="8" width="5" height="12"/><rect x="16" y="4" width="5" height="16"/>',
+  "purchasing":'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/>',
+  "others":'<circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/><circle cx="19.5" cy="9" r="1.4"/>',
+  "service-requests":'<path d="M3 8a2 2 0 002-2h14a2 2 0 002 2v2a2 2 0 000 4v2a2 2 0 00-2 2H5a2 2 0 00-2-2v-2a2 2 0 000-4z"/><path d="M10 6v12" stroke-dasharray="2 2"/>',
+  "documents":'<path d="M8 3h8l4 4v12H8z"/><path d="M4 7v14h12"/><path d="M11 11h6M11 14h6"/>',
+  "search":'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>'
+};
+const ico = (k)=>`<svg viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
+
+/* ============ animated pillar visuals (SVG, 160x100) ============ */
+let uid=0;
+function wave(amp,y,phase){let d=`M0 ${y}`;for(let x=0;x<=320;x+=4){d+=` L${x} ${(y+Math.sin((x/160)*Math.PI*2*2+phase)*amp).toFixed(2)}`}return d}
+function vis(id){
+  const g=`g${++uid}`;
+  const defs=`<defs><filter id="${g}f" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <linearGradient id="${g}a" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5AB2F3" stop-opacity=".45"/><stop offset="1" stop-color="#5AB2F3" stop-opacity="0"/></linearGradient>
+    <linearGradient id="${g}s" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#BCDFF3" stop-opacity="0"/><stop offset=".5" stop-color="#BCDFF3" stop-opacity=".9"/><stop offset="1" stop-color="#BCDFF3" stop-opacity="0"/></linearGradient></defs>`;
+  const S=(inner)=>`<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${defs}${inner}</svg>`;
+  switch(id){
+    case "supply-demand": return S(`
+      <line x1="10" y1="50" x2="150" y2="50" stroke="#2D6CB4" stroke-opacity=".35" stroke-dasharray="2 3"/>
+      <g filter="url(#${g}f)"><g class="v-scroll"><path d="${wave(16,50,0)}" fill="none" stroke="#5AB2F3" stroke-width="2"/></g>
+      <g class="v-scroll slow"><path d="${wave(12,50,Math.PI)}" fill="none" stroke="#7B6CF6" stroke-width="1.6" stroke-opacity=".9"/></g></g>
+      <circle cx="80" cy="50" r="4" fill="#BCDFF3" class="v-breathe"/><circle cx="80" cy="50" r="10" fill="none" stroke="#85BAE8" stroke-opacity=".5" class="v-breathe"/>
+      <text x="12" y="16" font-family="Barlow Condensed" font-size="8" letter-spacing="1" fill="#85BAE8">SUPPLY</text>
+      <text x="12" y="92" font-family="Barlow Condensed" font-size="8" letter-spacing="1" fill="#7B6CF6">DEMAND</text>`);
+    case "master": {
+      const pts=[[80,16],[132,34],[132,70],[80,86],[28,70],[28,34]];
+      let s=pts.map(([x,y])=>`<line x1="80" y1="50" x2="${x}" y2="${y}" stroke="#2D6CB4" stroke-opacity=".7"/>`).join("");
+      s+=pts.map(([x,y],i)=>`<line x1="${x}" y1="${y}" x2="${pts[(i+1)%6][0]}" y2="${pts[(i+1)%6][1]}" stroke="#2D6CB4" stroke-opacity=".3" stroke-dasharray="2 3"/>`).join("");
+      s+=pts.map(([x,y],i)=>`<circle r="1.8" fill="#BCDFF3" filter="url(#${g}f)"><animateMotion dur="${2.2+i*.3}s" repeatCount="indefinite" path="M${x} ${y} L80 50"/></circle>`).join("");
+      s+=pts.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="5" fill="#031340" stroke="#5AB2F3" stroke-width="1.4"/>`).join("");
+      s+=`<g class="v-spin"><circle cx="80" cy="50" r="15" fill="none" stroke="#5AB2F3" stroke-opacity=".5" stroke-dasharray="4 5"/></g>
+          <circle cx="80" cy="50" r="9" fill="#06205D" stroke="#85BAE8" stroke-width="1.8" filter="url(#${g}f)"/><circle cx="80" cy="50" r="3" fill="#BCDFF3"/>`;
+      return S(s);}
+    case "forecast": return S(`
+      <g stroke="#2D6CB4" stroke-opacity=".25">${[25,45,65,85].map(y=>`<line x1="10" x2="150" y1="${y}" y2="${y}"/>`).join("")}</g>
+      <line x1="92" y1="14" x2="92" y2="88" stroke="#85BAE8" stroke-opacity=".5" stroke-dasharray="2 2"/>
+      <text x="95" y="20" font-family="Barlow Condensed" font-size="7" letter-spacing="1" fill="#85BAE8">TODAY</text>
+      <path d="M92 52 L110 40 L128 34 L148 22 L148 50 L128 56 L110 60 L92 56Z" fill="url(#${g}a)" class="v-breathe"/>
+      <path d="M12 70 L28 62 L44 66 L60 54 L76 58 L92 54" fill="none" stroke="#5AB2F3" stroke-width="2" filter="url(#${g}f)"/>
+      <path d="M92 54 L110 50 L128 45 L148 36" fill="none" stroke="#BCDFF3" stroke-width="1.6" class="v-dash"/>
+      <circle r="3" fill="#BCDFF3" filter="url(#${g}f)"><animateMotion dur="3s" repeatCount="indefinite" path="M92 54 L110 50 L128 45 L148 36"/></circle>`);
+    case "inventory": {
+      const bars=[[18,30,52],[40,48,26],[62,22,44],[84,56,34],[106,36,58],[128,44,20]];
+      let s=`<line x1="10" y1="86" x2="150" y2="86" stroke="#2D6CB4"/><line x1="10" y1="40" x2="150" y2="40" stroke="#F2B84B" stroke-opacity=".55" stroke-dasharray="3 3"/>
+             <text x="150" y="36" text-anchor="end" font-family="Barlow Condensed" font-size="7" letter-spacing="1" fill="#F2B84B" fill-opacity=".8">TARGET</text>`;
+      s+=bars.map(([x,a,b],i)=>`<rect x="${x}" width="14" rx="1.5" fill="url(#${g}a)" stroke="#5AB2F3" stroke-width="1.2" y="${86-a}" height="${a}">
+        <animate attributeName="height" values="${a};${b};${a}" dur="${3.4+i*.35}s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="${86-a};${86-b};${86-a}" dur="${3.4+i*.35}s" repeatCount="indefinite"/></rect>`).join("");
+      return S(s);}
+    case "purchasing": return S(`
+      <path id="${g}p" d="M30 62 C60 18, 100 18, 130 62" fill="none" stroke="#2D6CB4" stroke-width="1.2"/>
+      <path d="M130 62 C100 86, 60 86, 30 62" fill="none" stroke="#2D6CB4" stroke-opacity=".5" stroke-dasharray="2 3"/>
+      <circle cx="30" cy="62" r="9" fill="#031340" stroke="#5AB2F3" stroke-width="1.6" filter="url(#${g}f)"/>
+      <circle cx="130" cy="62" r="9" fill="#031340" stroke="#5AB2F3" stroke-width="1.6" filter="url(#${g}f)"/>
+      <text x="30" y="84" text-anchor="middle" font-family="Barlow Condensed" font-size="7" letter-spacing="1" fill="#85BAE8">BUYER</text>
+      <text x="130" y="84" text-anchor="middle" font-family="Barlow Condensed" font-size="7" letter-spacing="1" fill="#85BAE8">SUPPLIER</text>
+      <g filter="url(#${g}f)"><g><rect x="-6" y="-7" width="12" height="14" rx="1.5" fill="#06205D" stroke="#BCDFF3" stroke-width="1.2"/>
+        <line x1="-3" x2="3" y1="-2" y2="-2" stroke="#BCDFF3"/><line x1="-3" x2="2" y1="1.5" y2="1.5" stroke="#BCDFF3"/>
+        <animateMotion dur="3.2s" repeatCount="indefinite" path="M30 62 C60 18, 100 18, 130 62"/></g></g>
+      <circle r="2.2" fill="#3FCF9A" filter="url(#${g}f)"><animateMotion dur="3.2s" begin="1.6s" repeatCount="indefinite" path="M130 62 C100 86, 60 86, 30 62"/></circle>`);
+    case "others": return S(`
+      <circle cx="80" cy="50" r="38" fill="none" stroke="#2D6CB4" stroke-opacity=".35"/>
+      <circle cx="80" cy="50" r="26" fill="none" stroke="#2D6CB4" stroke-opacity=".5" stroke-dasharray="3 4"/>
+      <g class="v-spin"><circle cx="118" cy="50" r="3.2" fill="#5AB2F3" filter="url(#${g}f)"/></g>
+      <g class="v-spin rev"><circle cx="80" cy="24" r="2.6" fill="#7B6CF6" filter="url(#${g}f)"/></g>
+      <g class="v-spin fast"><circle cx="54" cy="50" r="2.2" fill="#BCDFF3" filter="url(#${g}f)"/></g>
+      <path d="M80 50 L80 12 A38 38 0 0 1 113 31Z" fill="url(#${g}a)" class="v-spin fast" opacity=".7"/>
+      <circle cx="80" cy="50" r="8" fill="#06205D" stroke="#85BAE8" stroke-width="1.6"/>`);
+    case "service-requests": {
+      const xs=[22,62,102,142], lb=["NEW","TRIAGE","IN WORK","DONE"];
+      let s=`<line x1="22" y1="48" x2="142" y2="48" stroke="#2D6CB4" stroke-width="1.2"/>`;
+      s+=xs.map((x,i)=>`<circle cx="${x}" cy="48" r="8" fill="#031340" stroke="#5AB2F3" stroke-width="1.4"/>
+        <circle cx="${x}" cy="48" r="4" fill="${i===3?'#3FCF9A':'#5AB2F3'}" opacity=".2"><animate attributeName="opacity" values=".2;.2;1;.2" keyTimes="0;${(i*.22).toFixed(2)};${(i*.22+.08).toFixed(2)};1" dur="4s" repeatCount="indefinite"/></circle>
+        <text x="${x}" y="72" text-anchor="middle" font-family="Barlow Condensed" font-size="7" letter-spacing="1" fill="#85BAE8">${lb[i]}</text>`).join("");
+      s+=`<g filter="url(#${g}f)"><g><path d="M-8 -5 h16 v3 a2 2 0 0 0 0 4 v3 h-16 v-3 a2 2 0 0 0 0-4z" fill="#06205D" stroke="#BCDFF3" stroke-width="1.1"/>
+          <animateMotion dur="4s" repeatCount="indefinite" path="M22 30 L62 30 L102 30 L142 30" keyPoints="0;0;.333;.333;.667;.667;1" keyTimes="0;.08;.22;.3;.44;.52;.66" calcMode="linear"/></g></g>`;
+      return S(s);}
+    case "documents": return S(`
+      <rect x="62" y="14" width="46" height="62" rx="3" fill="#031340" stroke="#2D6CB4" opacity=".6" transform="rotate(8 85 45)"/>
+      <rect x="54" y="18" width="46" height="62" rx="3" fill="#031340" stroke="#2D6CB4" opacity=".8" transform="rotate(-6 77 49)"/>
+      <rect x="58" y="16" width="46" height="64" rx="3" fill="#06205D" stroke="#5AB2F3" stroke-width="1.4"/>
+      <g stroke="#85BAE8" stroke-opacity=".7" stroke-linecap="round">${[28,35,42,49,56,63].map((y,i)=>`<line x1="65" x2="${i%3===2?84:97}" y1="${y}" y2="${y}"/>`).join("")}</g>
+      <g clip-path="none"><rect x="58" y="18" width="46" height="12" fill="url(#${g}s)" class="v-scan"/></g>
+      <circle cx="120" cy="30" r="2" fill="#5AB2F3" class="v-breathe"/><circle cx="40" cy="70" r="1.6" fill="#7B6CF6" class="v-breathe"/>`);
+  }
+  return S("");
+}
+
+/* ============ storage (per-browser) ============ */
+const store={get(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const SAMPLE_TICKETS=[
+  {id:"SR-1042",title:"Add commodity filter to Supplier OTD Scorecard",type:"Enhancement",pillar:"Purchasing",prio:"P3",status:"In work",when:"Oct 27",sample:true},
+  {id:"SR-1041",title:"Days of Supply blank for one site since Monday",type:"Data issue",pillar:"Inventory",prio:"P2",status:"Triage",when:"Oct 28",sample:true}
+];
+function tickets(){return store.get("hub.tickets",[]).concat(SAMPLE_TICKETS)}
+
+/* ============ helpers ============ */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=(s)=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const P=(id)=>PILLARS.find(p=>p.id===id);
+const ANALYTICS=PILLARS.filter(p=>p.tools);
+const ALL_TOOLS=ANALYTICS.flatMap(p=>p.tools.map(t=>({...t,p})));
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove("show"),2600)}
+function openBtn(u,label="Open"){return u&&u!=="#"?`<a class="open" href="${esc(u)}" target="_blank" rel="noopener">${label} →</a>`:`<span class="open" aria-disabled="true">Link pending</span>`}
+function toolCard(t,showPillar){return `<article class="tool" data-type="${esc(t.t)}">
+  <div class="tool-top"><span class="badge">${esc(t.t)}</span><span class="pill ${t.s}">${{live:"Live",beta:"Beta",planned:"Planned"}[t.s]}</span></div>
+  <h3>${esc(t.n)}</h3><p>${esc(t.d)}</p>
+  <div class="meta"><span>Refresh <b>${esc(t.c)}</b></span><span>Owner <b>${esc(t.o)}</b></span>${showPillar?`<span>Pillar <b>${esc(t.p.name)}</b></span>`:""}</div>
+  ${openBtn(t.u)}</article>`}
+
+/* ============ nav ============ */
+function buildNav(){
+  const groups=[["Overview",[{id:"home",name:"Home"}]],["Analytics pillars",ANALYTICS],["Support",PILLARS.filter(p=>p.group==="Support")]];
+  $("#nav").innerHTML=groups.map(([h,items])=>`<div class="nav-group"><div class="nav-h">${h}</div>${items.map(p=>
+    `<a href="#${p.id}" data-id="${p.id}">${ico(p.id)}<span>${esc(p.name)}</span>${p.tools?`<span class="count">${p.tools.length}</span>`:""}</a>`).join("")}</div>`).join("");
+}
+function setNav(id){
+  document.querySelectorAll("#nav a").forEach(a=>{if(a.dataset.id===id)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")})}
+function closeNav(){document.body.classList.remove("nav-open");$("#menuBtn").setAttribute("aria-expanded","false")}
+
+/* ============ views ============ */
+function viewHome(){
+  const live=ALL_TOOLS.filter(t=>t.s==="live").length;
+  return `<section class="hero">
+    <div>
+      <div class="kicker ruled">Global Supply Chain · One-stop shop</div>
+      <h1 class="d-title">Every supply chain<span class="connector">— tool and dashboard —</span><span class="accent">In one place</span></h1>
+      <p class="lede">Find the dashboard you need across supply and demand, master data, forecast, inventory and purchasing. Raise a request or look up a definition without leaving the hub.</p>
+      <label class="search" for="q">${ico("search")}<input id="q" type="text" placeholder="Search tools, e.g. past-due, MAPE, BOM" autocomplete="off" aria-label="Search all tools"><kbd>/</kbd></label>
+      <div class="stats">
+        <div class="stat"><b>${ANALYTICS.length}</b><span>Analytics pillars</span></div>
+        <div class="stat"><b>${ALL_TOOLS.length}</b><span>Tools &amp; dashboards</span></div>
+        <div class="stat"><b>${live}</b><span>Live today</span></div>
+      </div>
+    </div>
+    <div class="hub-wrap"><canvas id="hub" aria-label="Animated hub linking the eight pillars" role="img"></canvas></div>
+  </section>
+  <div class="results" id="results" hidden></div>
+  <div class="sec-h"><h2>Pillars</h2><p>Select a pillar to see its tools, or use the side navigation.</p></div>
+  <div class="grid">${PILLARS.map(p=>`<a class="pillar" href="#${p.id}">
+     <div class="vis">${vis(p.id)}</div>
+     <div class="body"><h3>${esc(p.name)}</h3><p>${esc(p.blurb)}</p>
+     <div class="foot"><span>${p.tools?`${p.tools.length} tools`:p.id==="documents"?`${DOCS.length} documents`:"Create ticket"}</span><i>→</i></div></div></a>`).join("")}</div>
+  <div class="help-band">
+    <a class="help" href="#service-requests"><div class="node">${ico("service-requests")}</div><div><b>Need something new?</b><span>Request a dashboard, report a data issue or ask for access.</span></div></a>
+    <a class="help" href="#documents"><div class="node">${ico("documents")}</div><div><b>Not sure what a metric means?</b><span>Check the KPI handbook and data dictionary.</span></div></a>
+  </div>`;
+}
+function viewPillar(p){
+  const types=[...new Set(p.tools.map(t=>t.t))];
+  return `<section class="p-head"><div>
+    <div class="kicker ruled">Analytics pillar · ${p.tools.length} tools</div>
+    <h1 class="d-title">${esc(p.name)}</h1><p>${esc(p.lede)}</p></div>
+    <div class="p-vis">${vis(p.id)}</div></section>
+  <div class="toolbar" role="group" aria-label="Filter by type">
+    <button class="chip" aria-pressed="true" data-f="All">All</button>${types.map(t=>`<button class="chip" aria-pressed="false" data-f="${esc(t)}">${esc(t)}</button>`).join("")}
+    <span class="note">Sample catalog. Set each tool's link in the page config.</span></div>
+  <div class="tools" id="tools">${p.tools.map(t=>toolCard({...t,p})).join("")}</div>`;
+}
+function viewTickets(){
+  const opts=ANALYTICS.map(p=>`<option>${esc(p.name)}</option>`).join("");
+  return `<section class="p-head"><div>
+    <div class="kicker ruled">Support</div><h1 class="d-title">Service <span class="accent">Requests</span></h1>
+    <p>${esc(P("service-requests").lede)} Each ticket gets an ID you can quote to the analytics team.</p></div>
+    <div class="p-vis">${vis("service-requests")}</div></section>
+  <div class="two">
+    <div class="card"><h2>Create a ticket</h2>
+      <form id="tform" novalidate>
+        <div class="row">
+          <label for="t-type">Request type<select id="t-type"><option>New dashboard or report</option><option>Data issue</option><option>Access request</option><option>Enhancement</option><option>Question</option></select></label>
+          <label for="t-pillar">Pillar<select id="t-pillar">${opts}<option>Not sure</option></select></label>
+        </div>
+        <label for="t-title">Summary<input id="t-title" type="text" maxlength="120" placeholder="e.g. Past-due tracker missing one supplier site"></label>
+        <label for="t-desc">Details<textarea id="t-desc" placeholder="What do you need, which tool, and who is affected?"></textarea></label>
+        <div class="row">
+          <label for="t-prio">Priority<select id="t-prio"><option value="P3">P3 · Normal</option><option value="P2">P2 · Affects a team</option><option value="P1">P1 · Blocks a build or shipment</option></select></label>
+          <label for="t-name">Your name<input id="t-name" type="text" maxlength="60" placeholder="First Last"></label>
+        </div>
+        <div class="err" id="terr"></div>
+        <button class="btn" type="submit">Create ticket</button>
+      </form></div>
+    <div class="card"><h2>Recent tickets</h2>
+      <div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Summary</th><th>Pillar</th><th>Priority</th><th>Status</th></tr></thead><tbody id="tbody"></tbody></table></div>
+      <p class="note" style="margin:12px 0 0">Tickets you create are saved in this browser. Rows marked sample are examples.</p></div>
+  </div>`;
+}
+function renderTickets(){
+  const rows=tickets();
+  $("#tbody").innerHTML=rows.length?rows.map(t=>`<tr><td class="id">${esc(t.id)}</td><td>${esc(t.title)}<br><small style="color:var(--muted)">${esc(t.type)} · ${esc(t.when)}${t.sample?" · sample":""}</small></td>
+    <td>${esc(t.pillar)}</td><td class="prio ${t.prio}">${t.prio}</td><td><span class="pill ${t.status==="New"?"beta":"live"}">${esc(t.status)}</span></td></tr>`).join("")
+    :`<tr><td colspan="5" class="empty">No tickets yet. Create one on the left.</td></tr>`;
+}
+function viewDocs(){
+  const cats=[...new Set(DOCS.map(d=>d.c))];
+  return `<section class="p-head"><div>
+    <div class="kicker ruled">Support · ${DOCS.length} documents</div><h1 class="d-title">Docu<span class="accent">ments</span></h1>
+    <p>${esc(P("documents").lede)}</p></div><div class="p-vis">${vis("documents")}</div></section>
+  <div class="toolbar" role="group" aria-label="Filter by category"><button class="chip" aria-pressed="true" data-f="All">All</button>
+    ${cats.map(c=>`<button class="chip" aria-pressed="false" data-f="${esc(c)}">${esc(c)}</button>`).join("")}<span class="note">Sample library. Set each document's link in the page config.</span></div>
+  <div class="docs" id="docs">${DOCS.map(d=>`<article class="doc" data-type="${esc(d.c)}"><div class="ext">${d.x}</div>
+    <div style="min-width:0"><h3>${esc(d.n)}</h3><small>${esc(d.c)} · Updated ${esc(d.up)}</small><p style="margin:4px 0 0;color:var(--muted);font-size:13.5px">${esc(d.d)}</p></div>
+    ${openBtn(d.u,"View")}</article>`).join("")}</div>`;
+}
+
+/* ============ router ============ */
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let hubStop=null;
+function route(){
+  const id=(location.hash||"#home").slice(1);
+  const p=P(id); const v=$("#view");
+  if(hubStop){hubStop();hubStop=null}
+  let key=id;
+  if(id==="service-requests"){v.innerHTML=viewTickets();bindTickets()}
+  else if(id==="documents"){v.innerHTML=viewDocs();bindChips("#docs .doc")}
+  else if(p&&p.tools){v.innerHTML=viewPillar(p);bindChips("#tools .tool")}
+  else{key="home";v.innerHTML=viewHome();bindSearch();hubStop=startHub()}
+  v.classList.remove("view");void v.offsetWidth;v.classList.add("view");
+  if(reduced)v.querySelectorAll("svg").forEach(s=>s.pauseAnimations&&s.pauseAnimations());
+  setNav(key);closeNav();
+  document.title=(key==="home"?"":(P(key).name+" · "))+"Supply Chain Analytics Hub";
+  window.scrollTo(0,0);
+}
+function bindChips(sel){
+  document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+    document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===c));
+    const f=c.dataset.f; document.querySelectorAll(sel).forEach(el=>el.hidden=!(f==="All"||el.dataset.type===f));
+  }));
+}
+function bindSearch(){
+  const q=$("#q"),box=$("#results");
+  q.addEventListener("input",()=>{
+    const s=q.value.trim().toLowerCase();
+    if(!s){box.hidden=true;return}
+    const hits=ALL_TOOLS.filter(t=>(t.n+" "+t.d+" "+t.p.name+" "+t.t).toLowerCase().includes(s)).slice(0,8);
+    box.hidden=false;
+    box.innerHTML=hits.length?hits.map(t=>`<a class="result" href="#${t.p.id}"><div class="node r-ic" style="width:38px;height:38px">${ico(t.p.id)}</div>
+      <div style="min-width:0"><b>${esc(t.n)}</b><br><small>${esc(t.p.name)} · ${esc(t.t)} · ${esc(t.d)}</small></div><span class="pill ${t.s}">${{live:"Live",beta:"Beta",planned:"Planned"}[t.s]}</span></a>`).join("")
+      :`<div class="result" style="grid-template-columns:1fr"><span>No tool matches “${esc(q.value)}”. <a href="#service-requests" style="color:var(--neon)">Request a new one</a>.</span></div>`;
+  });
+}
+function bindTickets(){
+  renderTickets();
+  $("#tform").addEventListener("submit",e=>{
+    e.preventDefault();
+    const title=$("#t-title").value.trim(), desc=$("#t-desc").value.trim(), name=$("#t-name").value.trim();
+    if(title.length<6){$("#terr").textContent="Add a summary of at least 6 characters so the team can triage it.";$("#t-title").focus();return}
+    if(!name){$("#terr").textContent="Add your name so the team knows who to contact.";$("#t-name").focus();return}
+    $("#terr").textContent="";
+    const mine=store.get("hub.tickets",[]);
+    const n=1043+mine.length;
+    const d=new Date();
+    const t={id:"SR-"+n,title,desc,name,type:$("#t-type").value,pillar:$("#t-pillar").value,prio:$("#t-prio").value,status:"New",
+      when:d.toLocaleDateString("en-US",{month:"short",day:"numeric"})};
+    store.set("hub.tickets",[t,...mine]);
+    e.target.reset(); renderTickets(); toast(`Ticket ${t.id} created`);
+  });
+}
+
+/* ============ hero hub canvas ============ */
+function startHub(){
+  const cv=$("#hub"); if(!cv) return null;
+  const ctx=cv.getContext("2d"); let W,H,raf,t0=performance.now(),parts=[];
+  const labels=PILLARS.map(p=>p.name.replace("Service Requests","Requests").replace("Supply & Demand","S&D").toUpperCase());
+  function size(){const r=cv.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+  size(); const ro=new ResizeObserver(size); ro.observe(cv);
+  for(let i=0;i<70;i++)parts.push({k:i%8,p:Math.random(),v:.0018+Math.random()*.0035,o:Math.random()*.6-.3});
+  function nodes(t){const cx=W/2,cy=H/2,rx=W*.4,ry=H*.38;return labels.map((l,i)=>{const a=-Math.PI/2+i*Math.PI*2/8+t*.00004;return{x:cx+Math.cos(a)*rx,y:cy+Math.sin(a)*ry,l}})}
+  function glow(c,b){ctx.shadowColor=c;ctx.shadowBlur=b}
+  function frame(now){
+    const t=now-t0, cx=W/2, cy=H/2, R=Math.min(W,H);
+    ctx.clearRect(0,0,W,H);
+    const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,R*.6);bg.addColorStop(0,"rgba(7,56,142,.55)");bg.addColorStop(1,"rgba(0,4,21,0)");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    const N=nodes(t);
+    // traces
+    ctx.lineWidth=1;N.forEach(n=>{ctx.strokeStyle="rgba(45,108,180,.45)";ctx.beginPath();ctx.moveTo(n.x,n.y);const mx=(n.x+cx)/2;ctx.lineTo(mx,n.y);ctx.lineTo(cx+(n.x-cx)*.22,cy+(n.y-cy)*.22);ctx.stroke()});
+    // particles
+    parts.forEach(p=>{p.p+=p.v;if(p.p>1)p.p=0;const n=N[p.k];const mx=(n.x+cx)/2;let x,y;const ex=cx+(n.x-cx)*.22,ey=cy+(n.y-cy)*.22;
+      if(p.p<.5){const q=p.p/.5;x=n.x+(mx-n.x)*q;y=n.y}else{const q=(p.p-.5)/.5;x=mx+(ex-mx)*q;y=n.y+(ey-n.y)*q}
+      const a=Math.sin(p.p*Math.PI);glow("#5AB2F3",8);ctx.fillStyle=`rgba(188,223,243,${(.35+.65*a).toFixed(2)})`;ctx.beginPath();ctx.arc(x,y+p.o,1.6,0,7);ctx.fill()});
+    ctx.shadowBlur=0;
+    // rings
+    const rings=[[.3,.0003,[6,10],"rgba(90,178,243,.55)"],[.24,-.0005,[2,6],"rgba(133,186,232,.6)"],[.36,.00018,[30,18],"rgba(123,108,246,.35)"]];
+    rings.forEach(([r,s,d,c])=>{ctx.save();ctx.translate(cx,cy);ctx.rotate(t*s);ctx.setLineDash(d);ctx.strokeStyle=c;ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(0,0,R*r*.5,0,Math.PI*2);ctx.stroke();ctx.restore()});
+    ctx.setLineDash([]);
+    // core
+    const pulse=.5+.5*Math.sin(t*.002);
+    glow("#5AB2F3",30*pulse+10);ctx.strokeStyle="#5AB2F3";ctx.lineWidth=2.5;ctx.fillStyle="#031340";
+    ctx.beginPath();ctx.arc(cx,cy,R*.085,0,7);ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+    ctx.strokeStyle="#BCDFF3";ctx.lineWidth=2;ctx.lineCap="round";ctx.lineJoin="round";const s=R*.03;
+    ctx.beginPath();ctx.moveTo(cx-s*1.3,cy+s*.7);ctx.lineTo(cx-s*.4,cy-s*.2);ctx.lineTo(cx+s*.3,cy+s*.4);ctx.lineTo(cx+s*1.3,cy-s*.9);ctx.stroke();
+    // nodes
+    const fs=Math.max(9,R*.026);ctx.font=`600 ${fs}px "Barlow Condensed", sans-serif`;ctx.textAlign="center";
+    N.forEach((n,i)=>{const r=Math.max(7,R*.022);glow("#5AB2F3",12);ctx.fillStyle="#031340";ctx.strokeStyle=i>=6?"#7B6CF6":"#5AB2F3";ctx.lineWidth=1.6;
+      ctx.beginPath();ctx.arc(n.x,n.y,r,0,7);ctx.fill();ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle="#BCDFF3";ctx.beginPath();ctx.arc(n.x,n.y,r*.35,0,7);ctx.fill();
+      ctx.fillStyle="#C3CFDF";const below=n.y>cy;ctx.fillText(n.l.split("").join(String.fromCharCode(8202)),n.x,n.y+(below?r+fs+2:-r-6))});
+    if(!reduced)raf=requestAnimationFrame(frame);
+  }
+  raf=requestAnimationFrame(frame);
+  return ()=>{cancelAnimationFrame(raf);ro.disconnect()};
+}
+
+/* ============ boot ============ */
+buildNav();
+$("#menuBtn").addEventListener("click",()=>{const o=document.body.classList.toggle("nav-open");$("#menuBtn").setAttribute("aria-expanded",o)});
+$("#scrim").addEventListener("click",closeNav);
+addEventListener("keydown",e=>{if(e.key==="Escape")closeNav();if(e.key==="/"&&$("#q")&&document.activeElement.tagName!=="INPUT"&&document.activeElement.tagName!=="TEXTAREA"){e.preventDefault();$("#q").focus()}});
+addEventListener("hashchange",route);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{});
+route();
+</script>
+
+</body></html>
